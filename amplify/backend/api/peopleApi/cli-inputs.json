@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "paths": {
+    "/people": {
+      "name": "/people",
+      "lambdaFunction": "peopleLambda",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ]
+      }
+    }
+  }
+}

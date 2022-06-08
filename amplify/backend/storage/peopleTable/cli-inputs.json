@@ -1,0 +1,10 @@
+{
+  "resourceName": "peopleTable",
+  "tableName": "peopleTable",
+  "partitionKey": {
+    "fieldName": "id",
+    "fieldType": "string"
+  },
+  "gsi": [],
+  "triggerFunctions": []
+}
