@@ -22,6 +22,16 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+
+build/
+cypress/videos/
+cypress/fixtures/
+cypress/screenshots/
+instrumented/
+.eslintcache
+coverage/
+.nyc_output/
+
 #amplify-do-not-edit-begin
 amplify/\#current-cloud-backend
 amplify/.config/local-*
@@ -42,12 +52,3 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
-
-build/
-cypress/videos/
-cypress/fixtures/
-cypress/screenshots/
-instrumented/
-.eslintcache
-coverage/
-.nyc_output/

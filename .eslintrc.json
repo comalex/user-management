@@ -54,7 +54,7 @@
   },
   "rules": {
     "no-alert": "error",
-    "no-console": "error",
+    "no-console": "warn",
     "react-hooks/rules-of-hooks": "error",
     "prettier/prettier": [
       "warn",
