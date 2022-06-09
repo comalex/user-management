@@ -19,7 +19,7 @@
       "function": {
         "peopleLambda": {
           "deploymentBucketName": "amplify-usermanagementapp-dev-184043-deployment",
-          "s3Key": "amplify-builds/peopleLambda-53505737546559356164-build.zip"
+          "s3Key": "amplify-builds/peopleLambda-78367a517452565a5371-build.zip"
         }
       }
     }
