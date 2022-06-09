@@ -1,20 +1,32 @@
-import { DragOutlined } from '@ant-design/icons';
-import { List, Spin } from 'antd';
-import { useEffect, useState } from 'react';
+import { LogoutOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Col, List, Row, Space, Spin } from 'antd';
+import { useContext, useEffect, useState } from 'react';
 import ReactDragListView from 'react-drag-listview';
 
+// Context
+import AuthContext from '../context/auth';
+// Types
+import type { TPerson, TPersonServer } from '../hooks/usePeople';
 // Hooks
-import type { TPerson } from '../hooks/usePeople';
 import usePeople from '../hooks/usePeople';
 
-const ListScreen: React.FC = () => {
-  const [people, setPeople] = useState<TPerson[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+// Components
+import AddPersonModal from './AddPersonModal';
+import ListItem from './ListItem';
 
-  const { getPeople } = usePeople();
+const ListScreen: React.FC = () => {
+  const [people, setPeople] = useState<TPersonServer[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+
+  const { getPeople, updatePerson } = usePeople();
+  const { handleUserSignOut } = useContext(AuthContext);
 
   useEffect(() => {
     getPeople()
+      .then((people) =>
+        people.sort((a: TPerson, b: TPerson) => a.rank - b.rank)
+      )
       .then(setPeople)
       .finally(() => setIsLoading(false));
   }, []);
@@ -26,55 +38,151 @@ const ListScreen: React.FC = () => {
       toIndex: int, onDragEnd index,
   */
   const reorder = (
-    people: TPerson[],
+    people: TPersonServer[],
     startIndex: number,
     endIndex: number
-  ): TPerson[] => {
-    const result = Array.from(people);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    return result;
+  ): void => {
+    const [draggedItem] = people.slice(startIndex, startIndex + 1);
+
+    let itemsToUpdate: TPersonServer[] = [];
+    let updatedPeopleList: TPersonServer[] = [];
+    const isRankUp = endIndex <= startIndex;
+    if (isRankUp) {
+      const peopleToLower = people
+        .slice(endIndex, startIndex)
+        .map((person) => ({ ...person, rank: person.rank + 1 }));
+      const personToUpper = { ...draggedItem, rank: endIndex + 1 };
+      itemsToUpdate = [personToUpper, ...peopleToLower];
+      updatedPeopleList = [
+        ...people.slice(0, endIndex),
+        ...itemsToUpdate,
+        ...people.slice(startIndex + 1),
+      ];
+    } else {
+      const peopleToUpper = people
+        .slice(startIndex + 1, endIndex + 1)
+        .map((person) => ({ ...person, rank: person.rank - 1 }));
+      const personToLower = { ...draggedItem, rank: endIndex + 1 };
+      itemsToUpdate = [...peopleToUpper, personToLower];
+      updatedPeopleList = [
+        ...people.slice(0, startIndex),
+        ...itemsToUpdate,
+        ...people.slice(endIndex + 1),
+      ];
+    }
+
+    itemsToUpdate.map((person) =>
+      updatePerson(person.id, { name: person.name, rank: person.rank })
+    );
+    setPeople(updatedPeopleList);
   };
 
-  /*
-    ON DRAG END EVENT HANDLER ACCEPTS:
-      fromIndex: int, onDragStart index,
-      toIndex: int, onDragEnd index,
-      type: str, ReactDragListView Identifier,
-      index: MUST be parent list index,
-  */
-  const onDragEnd = (fromIndex: number, toIndex: number) => {
+  const onDragEnd = (fromIndex: number, toIndex: number): void => {
     /* IGNORES DRAG IF OUTSIDE DESIGNATED AREA */
-    if (toIndex < 0) return;
+    if (toIndex < 0) {
+      return;
+    }
+    reorder(people, fromIndex, toIndex);
+  };
 
-    const reorderedPeople = reorder(people, fromIndex, toIndex);
-    return setPeople(reorderedPeople);
+  const onItemUpdate = (newPerson: TPersonServer): void => {
+    const updatedPersonIndex = people.findIndex(
+      (person) => person.id === newPerson.id
+    );
+    const updatedPeople = [
+      ...people.slice(0, updatedPersonIndex),
+      newPerson,
+      ...people.slice(updatedPersonIndex + 1),
+    ];
+    setPeople(updatedPeople);
+  };
+
+  const onItemDelete = (person: TPersonServer): void => {
+    const updatedPeople = people.filter((p) => p.id !== person.id);
+    setPeople(updatedPeople);
+  };
+
+  const onItemAdd = (person: TPersonServer): void => {
+    const newPeople = [...people, person];
+    const sortedPeople = newPeople.sort(
+      (a: TPerson, b: TPerson) => a.rank - b.rank
+    );
+    setPeople(sortedPeople);
+  };
+
+  const onAddPersonClick = () => {
+    setIsModalVisible(true);
+  };
+
+  const onSignOutClick = () => {
+    if (handleUserSignOut) {
+      handleUserSignOut();
+    }
   };
 
   if (isLoading) {
-    return <Spin size="large" />;
+    return (
+      <Row align="middle" justify="center">
+        <Col>
+          <Spin size="large" />
+        </Col>
+      </Row>
+    );
   }
 
   return (
-    <ReactDragListView
-      nodeSelector=".ant-list-item.draggable-item"
-      lineClassName="dragLine"
-      onDragEnd={onDragEnd}
-    >
-      <List
-        size="small"
-        bordered
-        dataSource={people}
-        renderItem={(item) => {
-          return (
-            <List.Item key={item.id} className="draggable-item">
-              <DragOutlined className="icon" />
-              <List.Item.Meta title={item.name} className="grabbable" />
-            </List.Item>
-          );
+    <>
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <Row justify="space-between">
+          <Col>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={onAddPersonClick}
+            >
+              Add person
+            </Button>
+          </Col>
+          <Col>
+            <Button
+              danger
+              type="primary"
+              icon={<LogoutOutlined />}
+              onClick={onSignOutClick}
+            >
+              Sign Out
+            </Button>
+          </Col>
+        </Row>
+        <ReactDragListView
+          nodeSelector=".ant-list-item.draggable-item"
+          lineClassName="dragLine"
+          onDragEnd={onDragEnd}
+        >
+          <List
+            size="small"
+            bordered
+            dataSource={people}
+            renderItem={(item) => (
+              <ListItem
+                key={item.id}
+                person={item}
+                onItemUpdate={onItemUpdate}
+                onItemDelete={onItemDelete}
+              />
+            )}
+          />
+        </ReactDragListView>
+      </Space>
+      <AddPersonModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onSave={(person: TPersonServer) => {
+          onItemAdd(person);
+          setIsModalVisible(false);
         }}
       />
-    </ReactDragListView>
+    </>
   );
 };
 
