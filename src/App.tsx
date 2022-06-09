@@ -12,7 +12,7 @@ import ListScreen from './components/ListScreen';
 import AuthContext, { AuthStatus } from './context/auth';
 
 // Styles
-import 'antd/dist/antd.css';
+import 'antd/dist/antd.dark.min.css';
 import './App.css';
 
 Amplify.configure(awsconfig);
@@ -28,7 +28,7 @@ const App: React.FC = () => {
         </Col>
       )}
       {authStatus === AuthStatus.AUTHENTICATED && (
-        <Col span={6}>
+        <Col span={12}>
           <ListScreen />
         </Col>
       )}
