@@ -1,6 +1,8 @@
 import { Button, Input, InputNumber, Modal, Space, Typography } from 'antd';
 import { useState } from 'react';
 
+// Helpers
+import { showErrorNotification } from '../helpers/notification';
 // Hooks
 import type { TPersonServer } from '../hooks/usePeople';
 import usePeople from '../hooks/usePeople';
@@ -23,6 +25,10 @@ const AddPersonModal: React.FC<TAddPersonModalProps> = ({
   const { createPerson } = usePeople();
 
   const onOkClick = () => {
+    if (personName === '') {
+      showErrorNotification('Person name should not be empty');
+      return;
+    }
     setIsLoading(true);
     createPerson({ name: personName, rank: personRank })
       .then((person) =>

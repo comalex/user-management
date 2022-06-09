@@ -25,7 +25,9 @@ const ListScreen: React.FC = () => {
   useEffect(() => {
     getPeople()
       .then((people) =>
-        people.sort((a: TPerson, b: TPerson) => a.rank - b.rank)
+        Array.isArray(people)
+          ? people.sort((a: TPerson, b: TPerson) => a.rank - b.rank)
+          : []
       )
       .then(setPeople)
       .finally(() => setIsLoading(false));
