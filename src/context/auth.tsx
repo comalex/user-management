@@ -17,6 +17,7 @@ type TAuthContext = {
   handleUserSignIn: (email: string, password: string) => void;
   handleUserSignOut: () => void;
   handleUserSignUp: (email: string, password: string) => void;
+  getCurrentUser: () => Promise<any>;
   user: any;
   isAuthLoading: boolean;
 };
@@ -35,7 +36,11 @@ export const AuthContextProvider: React.FC<TAuthContextProvider> = ({
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    Auth.currentAuthenticatedUser()
+    getCurrentUser();
+  }, []);
+
+  const getCurrentUser = (): Promise<any> => {
+    return Auth.currentAuthenticatedUser()
       .then((user) => {
         if (user) {
           setUser(user);
@@ -45,7 +50,7 @@ export const AuthContextProvider: React.FC<TAuthContextProvider> = ({
         }
       })
       .catch(() => setAuthStatus(AuthStatus.UNAUTHENTICATED));
-  }, []);
+  };
 
   const handleUserSignOut = (): void => {
     setIsAuthLoading(true);
@@ -62,7 +67,7 @@ export const AuthContextProvider: React.FC<TAuthContextProvider> = ({
     setIsAuthLoading(true);
     Auth.signIn(email, password)
       .then((user) => {
-        setUser(user);
+        setUser({ email, password, ...user });
         setAuthStatus(AuthStatus.AUTHENTICATED);
       })
       .catch((err: any) => {
@@ -75,7 +80,7 @@ export const AuthContextProvider: React.FC<TAuthContextProvider> = ({
     setIsAuthLoading(true);
     Auth.signUp({ password, username: email })
       .then((user) => {
-        setUser(user);
+        setUser({ email, password, ...user });
         setAuthStatus(AuthStatus.CONFIRMATION);
       })
       .catch((err: any) => showErrorNotification(err.message))
@@ -85,15 +90,15 @@ export const AuthContextProvider: React.FC<TAuthContextProvider> = ({
   const handleConfirmSignUp = (email: string, code: string): void => {
     setIsAuthLoading(true);
     Auth.confirmSignUp(email, code)
-      .then(() => {
-        setAuthStatus(AuthStatus.AUTHENTICATED);
-      })
+      .then(() => Auth.signIn(user.email, user.password))
+      .then(() => setAuthStatus(AuthStatus.AUTHENTICATED))
       .catch((err: any) => showErrorNotification(err.message))
       .finally(() => setIsAuthLoading(false));
   };
 
   const context = {
     authStatus,
+    getCurrentUser,
     handleConfirmSignUp,
     handleUserSignIn,
     handleUserSignOut,
