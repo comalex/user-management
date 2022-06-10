@@ -28,7 +28,7 @@ const ListItem: React.FC<TListItemProps> = ({
 
   const editSubmitHandler = () => {
     setIsLoading(true);
-    updatePerson(person.id, { name: personName })
+    updatePerson(person.id, { name: personName, rank: person.rank })
       .then(() => onItemUpdate({ ...person, name: personName }))
       .then(() => setIsEditMode(false))
       .finally(() => setIsLoading(false));
